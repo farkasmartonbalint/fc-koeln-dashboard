@@ -8,7 +8,7 @@ import xgboost as xgb
 
 # === Page Configuration ===
 st.set_page_config(
-    page_title="1.FC Köln Transfer Dashboard",
+    page_title="1. FC Köln Transfer Dashboard",
     page_icon="⚽",
     layout="wide"
 )
