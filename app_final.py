@@ -211,8 +211,8 @@ valid_to_areas = category_mappings["to_competition_competition_area"]
 valid_position_groups = category_mappings["positionGroup"]
 valid_main_positions = category_mappings["mainPosition"]
 valid_feet = category_mappings["foot"]
-valid_clean_sheets = category_mappings["clean_sheets_before_grouped"]
-valid_scorer_groups = category_mappings["scorer_before_grouped_category"]
+valid_clean_sheets = category_mappings.get("clean_sheets_before_grouped", ["0-1", "2-4", "5-9", "10-14", "15+"])
+valid_scorer_groups = category_mappings.get("scorer_before_grouped_category", ["defender/goalkeeper", "0-3", "4-6", "7-10", "11-15", "16-20", "21-30", "30+"])
 # Dynamic mapping from real data
 position_group_to_main = pd.read_csv("xgboost_predictions_test.csv").groupby("positionGroup")["mainPosition"].unique().apply(list).to_dict()
 
@@ -370,8 +370,8 @@ data.update({
     'was_joker': int(was_joker),
     'foreign_transfer': foreign_transfer,
     'percentage_played_before': percentage_played_before,
-    'scorer_before': scorer_raw,
-    'clean_sheets_before': clean_sheets_before,
+    'scorer_before_grouped_category': scorer_raw,
+    'clean_sheets_before_grouped': clean_sheets_before,
     'fromTeam_marketValue': from_team_market_value,
     'toTeam_marketValue': to_team_market_value,
     'marketvalue_closest': market_value,
@@ -424,7 +424,7 @@ if predict_clicked:
             #"toTeam_marketValue": to_team_market_value,
             #"fromTeam_marketValue": from_team_market_value,
             "percentage_played_before": percentage_played_before,
-            "scorer_before": scorer_raw,
+            "scorer_before_grouped_category": scorer_raw,
             #"clean_sheets_before": clean_sheets_before,  # Falls du das dynamisch brauchst, kannst du das noch einbauen
             #"value_age_product": transfer_age * market_value,
             #"value_per_age": market_value / transfer_age if transfer_age > 0 else 0,
