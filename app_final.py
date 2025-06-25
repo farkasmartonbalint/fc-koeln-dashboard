@@ -167,7 +167,7 @@ valid_to_areas = category_mappings["to_competition_competition_area"]
 valid_position_groups = category_mappings["positionGroup"]
 valid_main_positions = category_mappings["mainPosition"]
 valid_feet = category_mappings["foot"]
-valid_clean_sheets = category_mappings["clean_sheets_before_grouped_new"]
+valid_clean_sheets = category_mappings["clean_sheets_before_grouped"]
 
 # Dynamic mapping from real data
 position_group_to_main = pd.read_csv("xgboost_predictions_test.csv").groupby("positionGroup")["mainPosition"].unique().apply(list).to_dict()
@@ -243,7 +243,7 @@ data.update({
     'foreign_transfer': foreign_transfer,
     'percentage_played_before': percentage_played_before,
     'scorer_before': scorer_raw,
-    'clean_sheets_before_grouped_new': clean_sheets_grouped,
+    'clean_sheets_before_grouped': clean_sheets_grouped,
     'fromTeam_marketValue': from_team_market_value,
     'toTeam_marketValue': to_team_market_value,
     'marketvalue_closest': market_value,
@@ -255,7 +255,8 @@ data.update({
     'from_competition_competition_area': from_area,
     'to_competition_competition_area': to_area,
     'value_per_age': market_value / transfer_age if transfer_age > 0 else 0,
-    'value_age_product': transfer_age * market_value
+    'value_age_product': transfer_age * market_value,
+    'team_market_value_relation': to_team_market_value / from_team_market_value if from_team_market_value > 0 else 0
 })
 
 
