@@ -5,6 +5,8 @@ import base64
 import json
 from pathlib import Path
 import xgboost as xgb
+from sklearn.preprocessing import StandardScaler
+from scipy.spatial.distance import cdist
 
 # === Page Configuration ===
 st.set_page_config(
@@ -105,6 +107,15 @@ def set_bg_image_with_overlay(image_path):
 
 # === BACKGROUND INIT ===
 set_bg_image_with_overlay(stadium_background)
+
+
+##Loading Dataset
+@st.cache_data
+def load_player_reference_data():
+    return pd.read_csv("final_dataset.csv")
+
+reference_df = load_player_reference_data()
+
 
 # === HELP ICON ===
 st.markdown("""
@@ -219,6 +230,38 @@ area_to_levels = {
 
 def help_input(label, tooltip_text):
     st.markdown(f"""
+    <style>
+    .help-icon {{
+        display: inline-block;
+        position: relative;
+        cursor: pointer;
+        margin-left: 8px;
+        color: #FFD700;
+        font-weight: bold;
+    }}
+
+    .tooltip {{
+        display: none;
+        position: absolute;
+        top: 22px;
+        left: 0;
+        width: 360px;
+        background-color: #333;
+        color: #fff;
+        padding: 0.8rem;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        z-index: 1000;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        white-space: normal;
+        line-height: 1.4;
+    }}
+
+    .help-icon:hover .tooltip {{
+        display: block;
+    }}
+    </style>
+
     <div style='margin-bottom: -15px'>
         <label style='font-weight:600;'>{label}</label>
         <span class="help-icon">❓
@@ -227,79 +270,85 @@ def help_input(label, tooltip_text):
     </div>
     """, unsafe_allow_html=True)
 
+
+
 col1, col2 = st.columns(2)
 
 with col1:
     card_start("🧍 Player Profile")
 
-    help_input("Height (cm)", "...")
+    help_input("Height (cm)", "Enter the player's height in centimeters. Taller players may perform better in aerial duels.")
     height = st.slider("", 150, 220, 180, key="height")
 
-    help_input("Transfer Age", "...")
+    help_input("Transfer Age", "Enter the player's age at the time of transfer. Important for assessing player development and experience.")
     transfer_age = st.slider("", 16, 40, 25, key="transfer_age")
 
-    help_input("Position Group", "...")
+    help_input("Position Group", "Select the player's position group. Important for tactical fit and team balance.")
     position_group = st.selectbox("", valid_position_groups, key="position_group")
 
-    help_input("Main Position", "...")
+    help_input("Main Position", "Select the player's main position. Important for tactical fit and team balance.")
     main_position = st.selectbox("", position_group_to_main.get(position_group, []), key="main_position")
 
-    help_input("Preferred Foot", "...")
+    help_input("Preferred Foot", "Select the player's preferred foot. Important for assessing shooting and passing capabilities.")
     foot = st.selectbox("", valid_feet, key="preferred_foot")
 
-    help_input("Player Market Value (€M)", "...")
+    help_input("Player Market Value (€M)", "Estimated market value of the player in millions of euros. Important for assessing transfer budget and player quality.")
     market_value = st.number_input("", 0.0, 200.0, 15.0, key="market_value")
 
     card_end()
 
     card_start("📊 Performance Details")
 
-    help_input("Playing % Before", "...")
+    help_input("Playing % Before", "Percentage of games played in the last season. Important for assessing player fitness and reliability.")
     percentage_played_before = st.slider("", 0.0, 100.0, 50.0, key="percentage_played_before")
 
-    if position_group.lower() in ['defender', 'goalkeeper']:
-        scorer_raw = 0
-        st.markdown("**Scorer (Goals + Assists):** Automatically ignored for defenders and goalkeepers")
-    else:
-        help_input("Scorer Value (Goals + Assists)", "...")
-        scorer_raw = st.slider("", 0, 50, 10, key="scorer")
+    #if position_group.lower() in ['defender', 'goalkeeper']:
+    #    scorer_raw = 0
+    #    st.markdown("**Scorer (Goals + Assists):** Automatically ignored for defenders and goalkeepers")
+    #else:
+    help_input("Scorer Value (Goals + Assists)", "Total goals and assists scored by the player in the last season. Important for forwards and midfielders.")
+    scorer_raw = st.slider("", 0, 40, 10, key="scorer")
 
-    help_input("Clean Sheets", "...")
-    clean_sheets_before = st.slider("", 0, 30, 5, key="clean_sheets")
+    help_input("Clean Sheets", "Number of clean sheets kept by the player in the last season. Important for goalkeepers and defenders.")
+    clean_sheets_before = st.slider("", 0, 20, 5, key="clean_sheets")
 
     card_end()
 
 with col2:
     card_start("🔄 Transfer Details")
 
-    help_input("From Team Market Value (€M)", "...")
+    help_input("From Team Market Value (€M)", "Market value of the team the player is transferring from. Important for assessing the player's previous club's financial strength and quality.")
     from_team_market_value = st.number_input("", 0.0, 1000.0, 61.7, key="from_team_market_value")
 
-    help_input("To Team Market Value (€M)", "...")
+    help_input("To Team Market Value (€M)", "Market value of the team the player is transferring to. Important for assessing the player's new club's financial strength and quality.")
     to_team_market_value = st.number_input("", 0.0, 1000.0, 61.7, key="to_team_market_value")
 
-    help_input("From Area", "...")
+    help_input("From Area", "Select the geographical area of the team the player is transferring from. Important for assessing league strength and player adaptation.")
     from_area = st.selectbox("", valid_areas, index=valid_areas.index("Germany") if "Germany" in valid_areas else 0, key="from_area")
 
-    help_input("From Level", "...")
-    from_level = st.selectbox("", area_to_levels.get(from_area, [1, 2, 3, 4]), index=area_to_levels.get(from_area, [1, 2, 3, 4]).index(1) if 1 in area_to_levels.get(from_area, [1, 2, 3, 4]) else 0, key="from_level")
+    help_input("From Level", "Select the competition level of the team the player is transferring from. Important for assessing league strength and player adaptation.")
+    from_level = st.selectbox("", area_to_levels.get(from_area, [1, 2, 3, 4]),
+                              index=area_to_levels.get(from_area, [1, 2, 3, 4]).index(1) if 1 in area_to_levels.get(from_area, [1, 2, 3, 4]) else 0,
+                              key="from_level")
 
-    help_input("To Area", "...")
+    help_input("To Area", "Select the geographical area of the team the player is transferring to. Important for assessing league strength and player adaptation.")
     to_area = st.selectbox("", valid_to_areas, index=valid_to_areas.index("Germany") if "Germany" in valid_to_areas else 0, key="to_area")
 
-    help_input("To Level", "...")
-    to_level = st.selectbox("", area_to_levels.get(to_area, [1, 2, 3, 4]), index=area_to_levels.get(to_area, [1, 2, 3, 4]).index(1) if 1 in area_to_levels.get(to_area, [1, 2, 3, 4]) else 0, key="to_level")
+    help_input("To Level", "Select the competition level of the team the player is transferring to. Important for assessing league strength and player adaptation.")
+    to_level = st.selectbox("", area_to_levels.get(to_area, [1, 2, 3, 4]),
+                            index=area_to_levels.get(to_area, [1, 2, 3, 4]).index(1) if 1 in area_to_levels.get(to_area, [1, 2, 3, 4]) else 0,
+                            key="to_level")
 
     card_end()
 
     with st.expander("⚙️ Further Transfer Details"):
-        help_input("Loan Transfer", "...")
+        help_input("Loan Transfer", "Check if the transfer is a loan. Important for assessing player commitment and future prospects.")
         isLoan = st.checkbox("Loan Transfer", value=False, key="is_loan")
 
-        help_input("Was Loan Before", "...")
+        help_input("Was Loan Before", "Check if the player was previously on loan. Important for understanding the player's transfer history.")
         wasLoan = st.checkbox("Was Loan Before", value=False, key="was_loan")
 
-        help_input("Was Joker Substitute", "...")
+        help_input("Was Joker Substitute", "Check if the player was used as a joker substitute. Important for assessing tactical versatility.")
         was_joker = st.checkbox("Was Joker Substitute", value=False, key="was_joker")
 
 
@@ -316,7 +365,7 @@ data.update({
     'was_joker': bool(was_joker),
     'foreign_transfer': foreign_transfer,
     'percentage_played_before': percentage_played_before,
-    'scorer_before_new': scorer_raw,
+    'scorer_before': scorer_raw,
     'clean_sheets_before': clean_sheets_before,
     'fromTeam_marketValue': from_team_market_value,
     'toTeam_marketValue': to_team_market_value,
@@ -342,7 +391,6 @@ for col, cats in category_mappings.items():
         input_df[col] = pd.Categorical(input_df[col], categories=cats)
 
 
-
 # === ACTION BUTTONS & OUTPUT ===
 col_l, col_m = st.columns([1, 6])
 
@@ -360,6 +408,48 @@ def hex_to_rgba(hex_color, alpha=0.5):
 if predict_clicked:
     with st.spinner("Running prediction..."):
         pred = model.predict(input_df)[0]
+                # ÄHNLICHKEITSBERECHNUNG
+        input_query = {
+            "height": height,
+            "mainPosition": main_position,
+            "positionGroup": position_group,
+            "foot": foot,
+            "transferAge": transfer_age,
+            "marketvalue_closest": market_value,
+            "percentage_played_before": percentage_played_before,
+            "scorer_before": scorer_raw,
+            "clean_sheets_before_grouped_new": "0-1",  # Falls du das dynamisch brauchst, kannst du das noch einbauen
+            "value_age_product": transfer_age * market_value,
+            "value_per_age": market_value / transfer_age if transfer_age > 0 else 0
+        }
+
+        def find_similar_players(input_data, df, top_n=3):
+            features = list(input_data.keys())
+            id_cols = ['playerId', 'playerName', 'mainPosition', 'season']
+            df_subset = df[features + id_cols].dropna().copy()
+
+            for col in df_subset.select_dtypes(include='object').columns:
+                df_subset[col] = df_subset[col].astype(str)
+                if col in input_data:
+                    input_data[col] = str(input_data[col])
+
+            df_subset = df_subset[df_subset['mainPosition'] == input_data['mainPosition']].copy()
+            df_subset = df_subset.sort_values("season", ascending=False).drop_duplicates("playerId", keep="first").reset_index(drop=True)
+
+            df_encoded = pd.get_dummies(df_subset[features])
+            input_encoded = pd.get_dummies(pd.DataFrame([input_data]))
+            df_encoded, input_encoded = df_encoded.align(input_encoded, join="inner", axis=1)
+
+            scaler = StandardScaler()
+            df_scaled = scaler.fit_transform(df_encoded)
+            input_scaled = scaler.transform(input_encoded)
+
+            df_subset["distance"] = cdist(df_scaled, input_scaled).flatten()
+            return df_subset.nsmallest(top_n, "distance")[["playerName", "mainPosition", "season", "distance"]]
+
+        similar_players = find_similar_players(input_query, reference_df)
+
+
         if pred < 30:
             msg, color, emoji = "Not Recommended", "#FF4B4B", "🚫"
         elif pred < 50:
@@ -390,6 +480,9 @@ if predict_clicked:
                 </span>
             </div>
             """, unsafe_allow_html=True)
+            st.markdown("### 👥 Top 3 Similar Players")
+            for _, row in similar_players.iterrows():
+                st.markdown(f"- **{row['playerName']}** | Position: {row['mainPosition']} | Season: {row['season']}")
 
         
 if st.checkbox("Show feature vector"):
