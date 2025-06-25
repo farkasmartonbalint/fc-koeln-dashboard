@@ -226,50 +226,81 @@ def help_input(label, tooltip_text):
         </span>
     </div>
     """, unsafe_allow_html=True)
-col1, col2 = st.columns(2)
-with col1:
 
+col1, col2 = st.columns(2)
+
+with col1:
     card_start("🧍 Player Profile")
 
-
     help_input("Height (cm)", "Enter the player's height in centimeters. Taller players may perform better in aerial duels.")
-    height = st.slider("", 150, 220, 180, help = "Enter the player's height in centimeters. Important for assessing physical presence and aerial ability.")
-    transfer_age = st.slider("Transfer Age", 16, 40, 25, help = "Enter the player's age at the time of transfer. Important for assessing player development and experience.")
-    position_group = st.selectbox("Position Group", valid_position_groups, help = "Select the player's position group. Important for tactical fit and team balance.")
-    main_position = st.selectbox("Main Position", position_group_to_main.get(position_group, []), help = "Select the player's main position. Important for tactical fit and team balance.")
-    foot = st.selectbox("Preferred Foot", valid_feet, help = "Select the player's preferred foot. Important for assessing shooting and passing capabilities.")
-    market_value = st.number_input("Player Market Value (€M)", 0.0, 200.0, 15.0, help = "Estimated market value of the player in millions of euros. Important for assessing transfer budget and player quality.")
+    height = st.slider("", 150, 220, 180)
+
+    help_input("Transfer Age", "Enter the player's age at the time of transfer. Important for assessing player development and experience.")
+    transfer_age = st.slider("", 16, 40, 25)
+
+    help_input("Position Group", "Select the player's position group. Important for tactical fit and team balance.")
+    position_group = st.selectbox("", valid_position_groups)
+
+    help_input("Main Position", "Select the player's main position. Important for tactical fit and team balance.")
+    main_position = st.selectbox("", position_group_to_main.get(position_group, []))
+
+    help_input("Preferred Foot", "Select the player's preferred foot. Important for assessing shooting and passing capabilities.")
+    foot = st.selectbox("", valid_feet)
+
+    help_input("Player Market Value (€M)", "Estimated market value of the player in millions of euros. Important for assessing transfer budget and player quality.")
+    market_value = st.number_input("", 0.0, 200.0, 15.0)
 
     card_end()
-    
+
     card_start("📊 Performance Details")
-    percentage_played_before = st.slider("Playing % Before", 0.0, 100.0, 50.0, help = "Percentage of games played in the last season. Important for assessing player fitness and reliability.")
-    
-    # Conditional scorer selection
+
+    help_input("Playing % Before", "Percentage of games played in the last season. Important for assessing player fitness and reliability.")
+    percentage_played_before = st.slider("", 0.0, 100.0, 50.0)
+
     if position_group.lower() in ['defender', 'goalkeeper']:
         scorer_raw = 0
-        st.markdown("**Scorer (Goals + Assists)**: Automatically ignored for defenders and goalkeepers")
+        st.markdown("**Scorer (Goals + Assists):** Automatically ignored for defenders and goalkeepers")
     else:
-        scorer_raw = st.slider("Scorer Value (Goals + Assists)", 0, 50, 10, help="Total goals and assists scored by the player in the last season. Important for forwards and midfielders.")
-    
-    clean_sheets_before = st.slider("Clean Sheets", 0, 30, 5, help="Number of clean sheets kept by the player in the last season. Important for goalkeepers and defenders.")
+        help_input("Scorer Value (Goals + Assists)", "Total goals and assists scored by the player in the last season. Important for forwards and midfielders.")
+        scorer_raw = st.slider("", 0, 50, 10)
+
+    help_input("Clean Sheets", "Number of clean sheets kept by the player in the last season. Important for goalkeepers and defenders.")
+    clean_sheets_before = st.slider("", 0, 30, 5)
 
     card_end()
+
 with col2:
     card_start("🔄 Transfer Details")
-    from_team_market_value = st.number_input("From Team Market Value (€M)", 0.0, 1000.0, 61.7, help = "Market value of the team the player is transferring from. Important for assessing the player's previous club's financial strength and quality.")
-    to_team_market_value = st.number_input("To Team Market Value (€M)", 0.0, 1000.0, 61.7, help = "Market value of the team the player is transferring to. Important for assessing the player's new club's financial strength and quality.")
-    
-    from_area = st.selectbox("From Area", valid_areas, index=valid_areas.index("Germany") if "Germany" in valid_areas else 0, help = "Select the geographical area of the team the player is transferring from. Important for assessing league strength and player adaptation.")
-    from_level = st.selectbox("From Level", area_to_levels.get(from_area, [1, 2, 3, 4]), index=(area_to_levels.get(from_area, [1, 2, 3, 4]).index(1) if 1 in area_to_levels.get(from_area, [1, 2, 3, 4]) else 0), key="from_level", help = "Select the competition level of the team the player is transferring from. Important for assessing league strength and player adaptation.")
 
-    to_area = st.selectbox("To Area", valid_to_areas, index=valid_to_areas.index("Germany") if "Germany" in valid_to_areas else 0, help = "Select the geographical area of the team the player is transferring to. Important for assessing league strength and player adaptation.")
-    to_level = st.selectbox("To Level", area_to_levels.get(to_area, [1, 2, 3, 4]), index=(area_to_levels.get(to_area, [1, 2, 3, 4]).index(1) if 1 in area_to_levels.get(to_area, [1, 2, 3, 4]) else 0), key="to_level", help = "Select the competition level of the team the player is transferring to. Important for assessing league strength and player adaptation.")
+    help_input("From Team Market Value (€M)", "Market value of the team the player is transferring from. Important for assessing the player's previous club's financial strength and quality.")
+    from_team_market_value = st.number_input("", 0.0, 1000.0, 61.7)
+
+    help_input("To Team Market Value (€M)", "Market value of the team the player is transferring to. Important for assessing the player's new club's financial strength and quality.")
+    to_team_market_value = st.number_input("", 0.0, 1000.0, 61.7)
+
+    help_input("From Area", "Select the geographical area of the team the player is transferring from. Important for assessing league strength and player adaptation.")
+    from_area = st.selectbox("", valid_areas, index=valid_areas.index("Germany") if "Germany" in valid_areas else 0)
+
+    help_input("From Level", "Select the competition level of the team the player is transferring from. Important for assessing league strength and player adaptation.")
+    from_level = st.selectbox("", area_to_levels.get(from_area, [1, 2, 3, 4]), index=area_to_levels.get(from_area, [1, 2, 3, 4]).index(1) if 1 in area_to_levels.get(from_area, [1, 2, 3, 4]) else 0, key="from_level")
+
+    help_input("To Area", "Select the geographical area of the team the player is transferring to. Important for assessing league strength and player adaptation.")
+    to_area = st.selectbox("", valid_to_areas, index=valid_to_areas.index("Germany") if "Germany" in valid_to_areas else 0)
+
+    help_input("To Level", "Select the competition level of the team the player is transferring to. Important for assessing league strength and player adaptation.")
+    to_level = st.selectbox("", area_to_levels.get(to_area, [1, 2, 3, 4]), index=area_to_levels.get(to_area, [1, 2, 3, 4]).index(1) if 1 in area_to_levels.get(to_area, [1, 2, 3, 4]) else 0, key="to_level")
+
     card_end()
+
     with st.expander("⚙️ Further Transfer Details"):
-        isLoan = st.checkbox("Loan Transfer", value=False, help = "Check if the transfer is a loan. Important for assessing player commitment and future prospects.")
-        wasLoan = st.checkbox("Was Loan Before", value=False, help = "Check if the player was previously on loan. Important for understanding the player's transfer history.")
-        was_joker = st.checkbox("Was Joker Substitute", value=False, help = "Check if the player was used as a joker substitute. Important for assessing tactical versatility.")
+        help_input("Loan Transfer", "Check if the transfer is a loan. Important for assessing player commitment and future prospects.")
+        isLoan = st.checkbox("Loan Transfer", value=False)
+
+        help_input("Was Loan Before", "Check if the player was previously on loan. Important for understanding the player's transfer history.")
+        wasLoan = st.checkbox("Was Loan Before", value=False)
+
+        help_input("Was Joker Substitute", "Check if the player was used as a joker substitute. Important for assessing tactical versatility.")
+        was_joker = st.checkbox("Was Joker Substitute", value=False)
 
 
 # === Foreign Transfer Logic ===
