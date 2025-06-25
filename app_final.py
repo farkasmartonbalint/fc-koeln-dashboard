@@ -199,9 +199,6 @@ valid_to_areas = category_mappings["to_competition_competition_area"]
 valid_position_groups = category_mappings["positionGroup"]
 valid_main_positions = category_mappings["mainPosition"]
 valid_feet = category_mappings["foot"]
-valid_scorer_before_grouped = category_mappings["scorer_before_grouped_category"]
-valid_clean_sheets = category_mappings["clean_sheets_before_grouped"]
-
 # Dynamic mapping from real data
 position_group_to_main = pd.read_csv("xgboost_predictions_test.csv").groupby("positionGroup")["mainPosition"].unique().apply(list).to_dict()
 
@@ -255,7 +252,7 @@ with col1:
     else:
         scorer_raw = st.slider("Scorer Value (Goals + Assists)", 0, 50, 10, help="Total goals and assists scored by the player in the last season. Important for forwards and midfielders.")
     
-    clean_sheets_grouped = st.slider("Clean Sheets", 0, 30, 5, help="Number of clean sheets kept by the player in the last season. Important for goalkeepers and defenders.")
+    clean_sheets_before = st.slider("Clean Sheets", 0, 30, 5, help="Number of clean sheets kept by the player in the last season. Important for goalkeepers and defenders.")
 
     card_end()
 with col2:
@@ -289,7 +286,7 @@ data.update({
     'foreign_transfer': foreign_transfer,
     'percentage_played_before': percentage_played_before,
     'scorer_before_new': scorer_raw,
-    'clean_sheets_before': clean_sheets_grouped,
+    'clean_sheets_before': clean_sheets_before,
     'fromTeam_marketValue': from_team_market_value,
     'toTeam_marketValue': to_team_market_value,
     'marketvalue_closest': market_value,
