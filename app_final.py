@@ -199,6 +199,7 @@ valid_to_areas = category_mappings["to_competition_competition_area"]
 valid_position_groups = category_mappings["positionGroup"]
 valid_main_positions = category_mappings["mainPosition"]
 valid_feet = category_mappings["foot"]
+valid_scorer_before_grouped = category_mappings["scorer_before_grouped_category"]
 valid_clean_sheets = category_mappings["clean_sheets_before_grouped"]
 
 # Dynamic mapping from real data
@@ -249,10 +250,10 @@ with col1:
     
     # Conditional scorer selection
     if position_group.lower() in ['defender', 'goalkeeper']:
-        scorer_raw = 0
+        scorer_raw = "defender/goalkeeper"
         st.markdown("**Scorer (Goals + Assists)**: Automatically ignored for defenders and goalkeepers")
     else:
-        scorer_raw = st.number_input("Scorer Value (Goals + Assists)", 0, 50, 5)
+        scorer_raw = st.selectbox("Scorer Value (Goals + Assists)", valid_scorer_before_grouped)
     
     clean_sheets_grouped = st.selectbox("Clean Sheets Grouped", valid_clean_sheets)
 
@@ -287,7 +288,7 @@ data.update({
     'was_joker': bool(was_joker),
     'foreign_transfer': foreign_transfer,
     'percentage_played_before': percentage_played_before,
-    'scorer_before': scorer_raw,
+    'scorer_before_grouped_category': scorer_raw,
     'clean_sheets_before_grouped': clean_sheets_grouped,
     'fromTeam_marketValue': from_team_market_value,
     'toTeam_marketValue': to_team_market_value,
@@ -331,18 +332,16 @@ def hex_to_rgba(hex_color, alpha=0.5):
 if predict_clicked:
     with st.spinner("Running prediction..."):
         pred = model.predict(input_df)[0]
-        if pred < 40:
+        if pred < 30:
             msg, color, emoji = "Not Recommended", "#FF4B4B", "🚫"
-        elif pred < 55:
-            msg, color, emoji = "Uncertain", "#FFA500", "⚠️"
-        elif pred < 70:
-            msg, color, emoji = "Worth a Try", "#FFD700", "🤔"
-        elif pred < 80:
+        elif pred < 50:
+            msg, color, emoji = "Uncertain", "#FFA500", "⚠️"  
+        elif pred < 65:
             msg, color, emoji = "Good Transfer", "#90EE90", "✅"
-        elif pred < 90:
-            msg, color, emoji = "Very Good", "#32CD32", "💎"
+        elif pred < 80:
+            msg, color, emoji = "Very Good Transfer", "#32CD32", "💎"
         else:
-            msg, color, emoji = "Superstar", "#008000", "🌟"
+            msg, color, emoji = "Key Player", "#008000", "🌟"
 
         rgba_bg = hex_to_rgba(color, alpha=0.6)  # 0.6 ist die Transparenz
 
