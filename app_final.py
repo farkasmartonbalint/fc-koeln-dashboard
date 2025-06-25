@@ -1,3 +1,4 @@
+from pyexpat import features
 import streamlit as st
 import pandas as pd
 import joblib
@@ -210,6 +211,8 @@ valid_to_areas = category_mappings["to_competition_competition_area"]
 valid_position_groups = category_mappings["positionGroup"]
 valid_main_positions = category_mappings["mainPosition"]
 valid_feet = category_mappings["foot"]
+valid_clean_sheets = category_mappings["clean_sheets_before_grouped"]
+valid_scorer_groups = category_mappings["scorer_before_grouped_category"]
 # Dynamic mapping from real data
 position_group_to_main = pd.read_csv("xgboost_predictions_test.csv").groupby("positionGroup")["mainPosition"].unique().apply(list).to_dict()
 
@@ -302,15 +305,17 @@ with col1:
     help_input("Playing % Before", "Percentage of games played in the last season. Important for assessing player fitness and reliability.")
     percentage_played_before = st.slider("", 0.0, 100.0, 50.0, key="percentage_played_before")
 
-    #if position_group.lower() in ['defender', 'goalkeeper']:
-    #    scorer_raw = 0
-    #    st.markdown("**Scorer (Goals + Assists):** Automatically ignored for defenders and goalkeepers")
-    #else:
-    help_input("Scorer Value (Goals + Assists)", "Total goals and assists scored by the player in the last season. Important for forwards and midfielders.")
-    scorer_raw = st.slider("", 0, 40, 10, key="scorer")
+    if position_group.lower() in ['defender', 'goalkeeper']:
+        scorer_raw = "defender/goalkeeper"
+        st.markdown("**Scorer (Goals + Assists):** Automatically ignored for defenders and goalkeepers")
+    else:
+        help_input("Scorer Value (Goals + Assists)", "Total goals and assists scored by the player in the last season. Important for forwards and midfielders.")
+        # Ohne "defender/goalkeeper" in der Auswahl
+        scorer_options = [g for g in valid_scorer_groups if g != "defender/goalkeeper"]
+        scorer_raw = st.selectbox("", scorer_options, key="scorer")
 
     help_input("Clean Sheets", "Number of clean sheets kept by the player in the last season. Important for goalkeepers and defenders.")
-    clean_sheets_before = st.slider("", 0, 20, 5, key="clean_sheets")
+    clean_sheets_before = st.selectbox("", valid_clean_sheets, key="clean_sheets")
 
     card_end()
 
@@ -410,17 +415,19 @@ if predict_clicked:
         pred = model.predict(input_df)[0]
                 # ÄHNLICHKEITSBERECHNUNG
         input_query = {
-            "height": height,
+            #"height": height,
             "mainPosition": main_position,
-            "positionGroup": position_group,
-            "foot": foot,
+            #"positionGroup": position_group,
+            #"foot": foot,
             "transferAge": transfer_age,
             "marketvalue_closest": market_value,
+            #"toTeam_marketValue": to_team_market_value,
+            #"fromTeam_marketValue": from_team_market_value,
             "percentage_played_before": percentage_played_before,
             "scorer_before": scorer_raw,
-            "clean_sheets_before": clean_sheets_before,  # Falls du das dynamisch brauchst, kannst du das noch einbauen
-            "value_age_product": transfer_age * market_value,
-            "value_per_age": market_value / transfer_age if transfer_age > 0 else 0,
+            #"clean_sheets_before": clean_sheets_before,  # Falls du das dynamisch brauchst, kannst du das noch einbauen
+            #"value_age_product": transfer_age * market_value,
+            #"value_per_age": market_value / transfer_age if transfer_age > 0 else 0,
             'from_competition_competition_area': from_area,
             'to_competition_competition_area': to_area,
             'from_competition_competition_level': from_level,
@@ -429,10 +436,16 @@ if predict_clicked:
 
         }
 
+        # === ÄHNLICHE SPIELER FINDEN ===
         def find_similar_players(input_data, df, top_n=3):
             features = list(input_data.keys())
-            id_cols = ['playerId', 'playerName', 'mainPosition', 'season']
-            df_subset = df[features + id_cols].dropna().copy()
+            id_cols = ['playerId', 'playerName', 'mainPosition', "percentage_played", 'season']
+
+            # 👇 Neu: doppelte Spaltennamen vermeiden
+            all_cols = list(dict.fromkeys(features + id_cols))
+
+            df_subset = df[all_cols].dropna().copy()
+            df_subset.reset_index(drop=True, inplace=True)
 
             for col in df_subset.select_dtypes(include='object').columns:
                 df_subset[col] = df_subset[col].astype(str)
@@ -451,7 +464,8 @@ if predict_clicked:
             input_scaled = scaler.transform(input_encoded)
 
             df_subset["distance"] = cdist(df_scaled, input_scaled).flatten()
-            return df_subset.nsmallest(top_n, "distance")[["playerName", "mainPosition", "season", "distance"]]
+            return df_subset.nsmallest(top_n, "distance")[["playerName", "mainPosition", "season", "percentage_played", "distance"]]
+
 
         similar_players = find_similar_players(input_query, reference_df)
 
@@ -486,9 +500,9 @@ if predict_clicked:
                 </span>
             </div>
             """, unsafe_allow_html=True)
-            st.markdown("### 👥 Top 3 Similar Players")
+            st.markdown("### 👥 Top 3 Similar Transfers")
             for _, row in similar_players.iterrows():
-                st.markdown(f"- **{row['playerName']}** | Position: {row['mainPosition']} | Season: {row['season']}")
+                st.markdown(f"- **{row['playerName']}** | Position: {row['mainPosition']} | Season: {row['season']} | Playing %: {row['percentage_played']}%")
 
         
 if st.checkbox("Show feature vector"):
