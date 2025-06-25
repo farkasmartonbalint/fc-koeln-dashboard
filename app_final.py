@@ -218,19 +218,21 @@ area_to_levels = {
 
 
 # === Inputs ===
+
+def help_input(label, tooltip_text):
+    st.markdown(f"""
+    <div style='margin-bottom: -15px'>
+        <label style='font-weight:600;'>{label}</label>
+        <span class="help-icon">❓
+            <span class="tooltip">{tooltip_text}</span>
+        </span>
+    </div>
+    """, unsafe_allow_html=True)
 col1, col2 = st.columns(2)
 with col1:
 
     card_start("🧍 Player Profile")
-    def help_input(label, tooltip_text):
-        st.markdown(f"""
-        <div style='margin-bottom: -15px'>
-            <label style='font-weight:600;'>{label}</label>
-            <span class="help-icon">❓
-                <span class="tooltip">{tooltip_text}</span>
-            </span>
-        </div>
-        """, unsafe_allow_html=True)
+
 
     help_input("Height (cm)", "Enter the player's height in centimeters. Taller players may perform better in aerial duels.")
     height = st.slider("", 150, 220, 180)
@@ -386,7 +388,7 @@ with st.expander("📈 Show Feature Importances"):
 # === Footer Section ===
 st.markdown("""
     <div style='text-align: center; margin-top: 2rem; color: #f9f9f9; font-size: 0.8rem;'>
-        © 2025 1. FC Köln & University of Cologne – All rights reserved.
+        © 2025 Next11 in Cooperation with 1. FC Köln and University of Cologne – All rights reserved.
         <br>
         <a href='https://www.fc-koeln.de'>1. FC Köln</a> | <a href='https://www.uni-koeln.de'>University of Cologne</a>
     </div>
