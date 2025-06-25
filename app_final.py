@@ -182,12 +182,12 @@ with col_uni:
 # === CARD STYLE HELPER ===
 def card_start(title):
     st.markdown(f"""
-    <div style='background-color: rgba(255, 255, 255, 0.08); 
+    <div style="background-color: rgba(255, 255, 255, 0.08); 
                 padding: 1.2rem 1.5rem; 
                 border-radius: 12px; 
                 margin-bottom: 1rem;
-                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);'>
-    <h4 style='color: white;'>{title}</h4>
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);">
+    <h4 style="color: white;">{title}</h4>
     """, unsafe_allow_html=True)
 
 def card_end():
