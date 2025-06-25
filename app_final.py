@@ -343,13 +343,13 @@ with col2:
 
     with st.expander("⚙️ Further Transfer Details"):
         help_input("Loan Transfer", "Check if the transfer is a loan. Important for assessing player commitment and future prospects.")
-        isLoan = st.checkbox("Loan Transfer", value=False, key="is_loan")
+        isLoan = st.checkbox("Loan Transfer", key="is_loan")
 
         help_input("Was Loan Before", "Check if the player was previously on loan. Important for understanding the player's transfer history.")
-        wasLoan = st.checkbox("Was Loan Before", value=False, key="was_loan")
+        wasLoan = st.checkbox("Was Loan Before", key="was_loan")
 
         help_input("Was Joker Substitute", "Check if the player was used as a joker substitute. Important for assessing tactical versatility.")
-        was_joker = st.checkbox("Was Joker Substitute", value=False, key="was_joker")
+        was_joker = st.checkbox("Was Joker Substitute", key="was_joker")
 
 
 # === Foreign Transfer Logic ===
@@ -362,7 +362,7 @@ data.update({
     'transferAge': transfer_age,
     'isLoan': int(isLoan),
     'wasLoan': int(wasLoan),
-    'was_joker': bool(was_joker),
+    'was_joker': int(was_joker),
     'foreign_transfer': foreign_transfer,
     'percentage_played_before': percentage_played_before,
     'scorer_before': scorer_raw,
@@ -418,9 +418,15 @@ if predict_clicked:
             "marketvalue_closest": market_value,
             "percentage_played_before": percentage_played_before,
             "scorer_before": scorer_raw,
-            "clean_sheets_before_grouped_new": "0-1",  # Falls du das dynamisch brauchst, kannst du das noch einbauen
+            "clean_sheets_before": clean_sheets_before,  # Falls du das dynamisch brauchst, kannst du das noch einbauen
             "value_age_product": transfer_age * market_value,
-            "value_per_age": market_value / transfer_age if transfer_age > 0 else 0
+            "value_per_age": market_value / transfer_age if transfer_age > 0 else 0,
+            'from_competition_competition_area': from_area,
+            'to_competition_competition_area': to_area,
+            'from_competition_competition_level': from_level,
+            'to_competition_competition_level': to_level,
+            'team_market_value_relation': to_team_market_value / from_team_market_value if from_team_market_value > 0 else 0
+
         }
 
         def find_similar_players(input_data, df, top_n=3):
