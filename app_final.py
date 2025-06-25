@@ -106,6 +106,38 @@ def set_bg_image_with_overlay(image_path):
 # === BACKGROUND INIT ===
 set_bg_image_with_overlay(stadium_background)
 
+# === HELP ICON ===
+st.markdown("""
+<style>
+.help-icon {
+    display: inline-block;
+    position: relative;
+    cursor: pointer;
+    margin-left: 8px;
+    color: #FFD700;
+    font-weight: bold;
+}
+
+.help-icon:hover .tooltip {
+    display: block;
+}
+
+.tooltip {
+    display: none;
+    position: absolute;
+    top: 20px;
+    left: 0;
+    background-color: #333;
+    color: #fff;
+    padding: 0.7rem;
+    border-radius: 8px;
+    font-size: 0.85rem;
+    max-width: 240px;
+    z-index: 1000;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+</style>
+""", unsafe_allow_html=True)
 
 
 
@@ -190,7 +222,18 @@ col1, col2 = st.columns(2)
 with col1:
 
     card_start("🧍 Player Profile")
-    height = st.slider("Height (cm)", 150, 220, 180)
+    def help_input(label, tooltip_text):
+        st.markdown(f"""
+        <div style='margin-bottom: -15px'>
+            <label style='font-weight:600;'>{label}</label>
+            <span class="help-icon">❓
+                <span class="tooltip">{tooltip_text}</span>
+            </span>
+        </div>
+        """, unsafe_allow_html=True)
+
+    help_input("Height (cm)", "Enter the player's height in centimeters. Taller players may perform better in aerial duels.")
+    height = st.slider("", 150, 220, 180)
     transfer_age = st.slider("Transfer Age", 16, 40, 25)
     position_group = st.selectbox("Position Group", valid_position_groups)
     main_position = st.selectbox("Main Position", position_group_to_main.get(position_group, []))
