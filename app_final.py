@@ -452,7 +452,12 @@ if predict_clicked:
                 if col in input_data:
                     input_data[col] = str(input_data[col])
 
-            df_subset = df_subset[df_subset['mainPosition'] == input_data['mainPosition']].copy()
+            df_subset = df_subset[
+             (df_subset['mainPosition'] == input_data['mainPosition']) &
+             (df_subset['from_competition_competition_level'] == input_data['from_competition_competition_level']) &
+             (df_subset['to_competition_competition_level'] == input_data['to_competition_competition_level'])
+            ].copy()
+
             df_subset = df_subset.sort_values("season", ascending=False).drop_duplicates("playerId", keep="first").reset_index(drop=True)
 
             df_encoded = pd.get_dummies(df_subset[features])
@@ -471,15 +476,13 @@ if predict_clicked:
 
 
         if pred < 30:
-            msg, color, emoji = "Not Recommended", "#FF4B4B", "🚫"
+            msg, color, emoji = "Not Recommended/Flop", "#FF4B4B", "🚫"
         elif pred < 50:
-            msg, color, emoji = "Uncertain", "#FFA500", "⚠️"  
-        elif pred < 65:
-            msg, color, emoji = "Good Transfer", "#90EE90", "✅"
-        elif pred < 80:
-            msg, color, emoji = "Very Good Transfer", "#32CD32", "💎"
+            msg, color, emoji = "Expected to Be a Substitute", "#FFA500", "⚠️"  
+        elif pred < 75:
+            msg, color, emoji = "Expected to Be a Rotation Player", "#32CD32", "💎"
         else:
-            msg, color, emoji = "Key Player", "#008000", "🌟"
+            msg, color, emoji = "Expected to Be aKey Player", "#008000", "🌟"
 
         rgba_bg = hex_to_rgba(color, alpha=0.6)  # 0.6 ist die Transparenz
 
