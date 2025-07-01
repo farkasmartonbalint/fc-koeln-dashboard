@@ -198,10 +198,6 @@ def card_end():
 model = xgb.XGBRegressor()
 model.load_model("model2.json")
 
-
-# Load GAM metamodel
-gam_model = joblib.load("gam_model.pkl")
-
 @st.cache_data
 def load_mapping():
     with open("category_mappings.json") as f:
@@ -416,11 +412,7 @@ def hex_to_rgba(hex_color, alpha=0.5):
 # Prediction
 if predict_clicked:
     with st.spinner("Running prediction..."):
-        # Original model prediction
-        xgb_pred = model.predict(input_df)  # returns an array
-        
-        # GAM metamodel prediction based on original model's output
-        final_pred = gam_model.predict(xgb_pred.reshape(-1, 1))
+        pred = model.predict(input_df)[0]
                 # ÄHNLICHKEITSBERECHNUNG
         input_query = {
             #"height": height,
@@ -483,14 +475,14 @@ if predict_clicked:
         similar_players = find_similar_players(input_query, reference_df)
 
 
-        if final_pred < 35:
-            msg, color = "Not Recommended", "#FF4B4B"
-        elif final_pred < 55:
-            msg, color = "Expected to Be a Substitute", "#FFA500"
-        elif final_pred < 75:
-            msg, color = "Expected to Be a Rotation Player", "#32CD32"
+        if pred < 30:
+            msg, color, emoji = "Not Recommended/Flop", "#FF4B4B", "🚫"
+        elif pred < 50:
+            msg, color, emoji = "Expected to Be a Substitute", "#FFA500", "⚠️"  
+        elif pred < 75:
+            msg, color, emoji = "Expected to Be a Rotation Player", "#32CD32", "💎"
         else:
-            msg, color = "Expected to Be a Key Player", "#008000"
+            msg, color, emoji = "Expected to Be a Key Player", "#008000", "🌟"
 
         rgba_bg = hex_to_rgba(color, alpha=0.6)  # 0.6 ist die Transparenz
 
@@ -507,7 +499,7 @@ if predict_clicked:
                 letter-spacing: 0.5px;
                 box-shadow: 0 4px 12px rgba(0,0,0,0.3);'>
                 <span style='color: white; font-size: 1.3rem; font-weight: 600;'>
-                    {msg} – Expected Playing Time: <strong>{final_pred[0]:.2f}%</strong>
+                    {emoji} {msg} – Expected Playing Time: <strong>{pred:.2f}%</strong>
                 </span>
             </div>
             """, unsafe_allow_html=True)
