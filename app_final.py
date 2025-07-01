@@ -482,7 +482,7 @@ if predict_clicked:
         elif pred < 75:
             msg, color, emoji = "Expected to Be a Rotation Player", "#32CD32", "💎"
         else:
-            msg, color, emoji = "Expected to Be aKey Player", "#008000", "🌟"
+            msg, color, emoji = "Expected to Be a Key Player", "#008000", "🌟"
 
         rgba_bg = hex_to_rgba(color, alpha=0.6)  # 0.6 ist die Transparenz
 
